@@ -138,12 +138,12 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
                     "last_time": start_time_ts,
                     "sub_idx": sub_idx
                 })
-                with open(f"{os.path.splitext(file_name)[0]}_raw.srt", "a", encoding="utf-8") as myfile:
-                    myfile.write(f"{list_srt[-1]['sub_idx']}\n")
-                    myfile.write(f"{list_srt[-1]['first_time']} --> {list_srt[-1]['last_time']}\n")
-                    myfile.write(f"{list_srt[-1]['description']}\n")
-                    myfile.write('\n')
-                    myfile.close()
+                # with open(f"{os.path.splitext(file_name)[0]}_raw.srt", "a", encoding="utf-8") as myfile:
+                #     myfile.write(f"{list_srt[-1]['sub_idx']}\n")
+                #     myfile.write(f"{list_srt[-1]['first_time']} --> {list_srt[-1]['last_time']}\n")
+                #     myfile.write(f"{list_srt[-1]['description']}\n")
+                #     myfile.write('\n')
+                #     myfile.close()
 
                 with open(f"{os.path.splitext(file_name)[0]}.srt", "a", encoding="utf-8") as myfile_vi:
                     myfile_vi.write(f"{list_srt[-1]['sub_idx']}\n")
