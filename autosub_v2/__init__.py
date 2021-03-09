@@ -109,6 +109,8 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
     """
     # Opens the Video file
     cap = cv2.VideoCapture(source_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    time_per_frame = 1 / fps
     i = 0
     sub_idx = 1
     list_srt = []
@@ -162,7 +164,7 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
             old_des = description
             # cv2.imshow('none', crop_img)
             # cv2.waitKey(1)
-            start_time += 0.4
+            start_time += time_per_frame * 12
 
         i += 1
 
