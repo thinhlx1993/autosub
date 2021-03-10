@@ -8,17 +8,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import time
 import argparse
-# import audioop
-# import math
-# import multiprocessing
+import audioop
+import math
+import multiprocessing
 import cv2
 import os
 # import subprocess
 import sys
-# import tempfile
-# import wave
-# import json
-# import requests
+import tempfile
+import wave
+import json
+import requests
 from datetime import datetime
 try:
     from json.decoder import JSONDecodeError
@@ -26,8 +26,8 @@ except ImportError:
     JSONDecodeError = ValueError
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-# from googleapiclient.discovery import build
-# from progressbar import ProgressBar, Percentage, Bar, ETA
+from googleapiclient.discovery import build
+from progressbar import ProgressBar, Percentage, Bar, ETA
 
 from autosub_v2.constants import (
     LANGUAGE_CODES, GOOGLE_SPEECH_API_KEY, GOOGLE_SPEECH_API_URL,
@@ -52,42 +52,43 @@ DEFAULT_DST_LANGUAGE = 'vi'
 
 
 import six
-# from google.oauth2 import service_account
-# from google.cloud import vision
-# from google.cloud import translate_v2 as translate
+from google.oauth2 import service_account
+from google.cloud import vision
+from google.cloud import translate_v2 as translate
 
-# account_info = {
-#     "type": "service_account",
-#     "project_id": "iconic-era-306703",
-#     "private_key_id": "ad24193131c38ec8d36f32cf9385a48a1283f8fb",
-#     "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCoj4rmZx8SKbsG\nrC7FEPKviLBYBdYXPcs1DEsbEHD4ZCx1/a2fIzZzCXrkxSdiFMC9XcJA01cbynqK\nnspKI84dV5lwOJ9s5NCstwdOF+EIn4HZegQbIO6K4sHhFoSEE+wHgBnB1wi3cf9l\n1hNPmHAWNewULizqJjtlRJzc5HJ2ls2Zo289Vz4DsLQhsbQl9u/pziOx7NuxF22G\nIIV8H+K2pc/ipnKpPgjyCxoqyAI7WvgnEHgu0KGpU6xGlp5X4DBve/JSf6GFsRV/\ntM9z71IuGM2BYSxFoX/Wlw/N435ocGc9mv3h7Zu9FSa8yIN2shjNeL2c5OzIUlE/\nWS+/ZjoxAgMBAAECggEAA/4MX+sq2vsGjUCoRe4iFWLDLH6M5NWHmdzN7Zjs2BFF\nVVEaGuYSXNSpZsA9r87GhuWw22i2DDg2QVDEAVAKSnsf7P7GVeWwhJq8L08U+yeO\nA4jmjn7v73Wx+mMWZetz4HSaB5OQhwnJ7w9MO0skwn3p9stmMHCR4RLoNToq9OCR\nHU9HKmsWZXItroYfjbBeeHZ8R7A5rLaxpRYzCzLF0CfUwMuRjD9A1npJ9dZH5JG4\nFsirVlTKEAJmqHbwJn0/sWgp2Ph4dOJ+DKrkjl3qnZq/WHqba3R0llr4DBMcTlU4\nQgPuhMgAeBrt34Pf3qZQxVUGUycf7VK8Bpytka6QvQKBgQDny2mW7mfp7MzT4qQY\nwMrc4xEZoQRRNgr+o3q/QQy/AccO/lZvXZgukINV88QjVfbSYuW5klctfoitYGtf\n+WjRtS9QkyZ+rkeykB91XUnpObrIWjXVmqVrFWbLTJWoLghP7KaGf3sew7bJMpLr\nNmRPMqdOdImFzvmRqdcCFTS+fQKBgQC6KbFgS5g9M3NWQXoHx6SwOYAaE3a55+Cg\n5JHhNl0QVwwKIzfrP0+/9JQaxzMVOKiF1TGcLwcjotIkZlaufJTHTcNf9nZMTUxJ\n4fIVZZtk0/uR6vB6Z41ey2eIUnCyPkcsl/a6eP81LJf3ytFh58rvY4VBceunjK2A\nfEh3kqt0xQKBgAIODpiU8nzjaYlzV+sUQngk1zD3+XbS2NQbFOp/JCLJXD9ox9Fi\n7gdzpoZri9CYYYDJ+alkf7tahNGsqicGqgQ56/p144B6AQ63MmAy/IXBykMecZ28\nKj1BylCBFE6SYeZ7fZpxpODH8WXlOeI18Du3gj4y0ElMZXACJnLRR09tAoGAQrgu\nmhR9u3F1JLTSx3cFzyLMhovzQS2ZlBBXOCADupd3+SomIGnQazt82RwLcs+blluS\nLCeup1bzeZgz+NUtfUChhQMP4sjRTqlr2b9QshJHV0Sca0IxqIe90124hilL2O+d\nvbcfwC77SBOody5bzPAeEhaCHsqMZEAmuLQYPwECgYEA58pot3jrSWKoEp6FUJc1\n1IZ9iNpaHkCElskAh039RqUUPpaP3kjiqhC3N00f9OegT7mbRpQeYJUOBsU0omOg\nkM2VPRfsQYNOJK6x0Jo7cUeG1h2BAniTUYVDokvNwlFto4aBtyVmZSTK8RLRa12D\n4tgtq8xzU/QzBNSWB9DB/B4=\n-----END PRIVATE KEY-----\n",
-#     "client_email": "autogeneratesubtitle@iconic-era-306703.iam.gserviceaccount.com",
-#     "client_id": "104824741467913688408",
-#     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-#     "token_uri": "https://oauth2.googleapis.com/token",
-#     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-#     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/autogeneratesubtitle%40iconic-era-306703.iam.gserviceaccount.com"
-# }
-#
-# credentials = service_account.Credentials.from_service_account_info(account_info)
+account_info = {
+    "type": "service_account",
+    "project_id": "iconic-era-306703",
+    "private_key_id": "77b1f06485345d49bb49d7c9299456fb71303ab3",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDhWfJc9tZGHxlj\n19+m5aX/wLvZ671d3SSKDPmrDtIkIi1RxvSOMVbb/0mSUlOcrbi+2CVg6l0MASCt\n1k23mq4vDpPOBfPHY9OxwMVi499NkaBKf050g/l1Bnw3VIi3uu4EJaWQuFcoAXeS\nrVFHTP6JgB3V/iQSGG/gjEdIwvsTakSy4DOMAhitavYLU/fIIipDEwBOlL5tbQ+p\nxSRgA7Dpsr2FLM8gDWASTm6LoGVvpL/N11uuSrcKD9P/HWQyA+PI9S9PQWKRjkPo\n/S9A9oQgRMUEloj5QZHMqh9mpeEuoup6FqE1LfH7auNPmLyWvAwygw031Igqm0tk\nzCTGbw3bAgMBAAECggEAWsdxpzp2UfQYNczSFzj+uHrLEbvx4lyB6izU7LBBPfYY\nnI9Rl/BPRbtex1drwDuJJzQKRrLSfdH8eJrSXuqsTV+Jch6auBFCR6JYwX/7RhOq\nZyhGkhBSDu7oXh+rHZxrYndJ7XUdAwwoP4mbKuZcyUY3fqtsm2+FrgbEdo65NvXA\nCplWeDAujGSADMszX5tFii+uWbDEVrvNkvAwCpTv+PEclseFTKaLbhtMejeoHW0z\n1QbLDx2mCcYvIHQ52GGMFHsVHdfEYT/WFLWd5YnjX6KmY2kCFtQ6cWJ3Qo6FMUgF\nnYx/22G7S0GdYybzfqE2XnGUar0HR/Aoe25R2UkdtQKBgQD4qOCqGmDd2YF3DEI6\nP/m9epcSfJfmV4ZSLJ9VNo7nzVd/8swXpZBw2nqQizUeP4Rim5EH1gNbB5PVSumU\nX5hcBfdAOHc9DNNjexEeQQNR4JOPsMAN2BzVtgqP2hgZjkjBoHninIcd++29o4ga\nvvMyaKJ2/bD6jVjbsrxW/OF8HQKBgQDoAO2Sq4wX5jRhTA8xfiUCn4XRwRDN/IEK\ny00exRq3alFYOrQH3jYWxRGbFrwi6Br13rxWKcryukPwU7w/Xi5M4ytMpjESKJ96\n5NY1dU11rNgHd0kRYfuaaQv+X5ZNBG0AXYL+4KANnwumVNMV1In7TJXrBvqqn1++\n4O7dst9gVwKBgBq482P0b8KHtG0ZySg/ZdRiD0gyUZS0hT/hgcIDmfn5TFT4v8wu\nw8YNBKzx+ORmSRDbzQs9iaDHwLBkW5PRbis9jOO+7bmG3lTLjfxlWjj7XIBNq2YR\neo/Q/3OUKZDdhJ4iY9bhoXesclE1+NN+/93D9um4u8NBW3JI1Aq5JHZVAoGACBtQ\nMdnQsV0X43Z26XHQ9UCBuoyWe7wg/jGQZkzY3CPY585VUBkRpsYIEXU/6bBWkNTR\nm+kl8ElV6mXipAw0bfdaIfmEqW/F8tNgMMoChOQfQFOIuBTGZ+TXyHGqnNJUxLh/\nxUwwC4nNLGi2X4Lnt2I7stSxmZisDc1qS1DewU0CgYEA58RFBSp7v+rklgppKEq8\nP2H901xvB+KA8dX0Mt1uadIu7BuAw9oWxr8Kj1Vs0gtyU2OkIpMwx5xYu7YXYIFA\n4YcIj8r8YOpimATyyE5nzKmH5gkPkev3XZyFQ0fyng77ZME+/ng2cex+kCuM1KuK\nh5tYaUSRTWyUJR/YzKNi/Ao=\n-----END PRIVATE KEY-----\n",
+    "client_email": "default@iconic-era-306703.iam.gserviceaccount.com",
+    "client_id": "116179332925558425360",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/default%40iconic-era-306703.iam.gserviceaccount.com"
+}
+
+
+credentials = service_account.Credentials.from_service_account_info(account_info)
 # client = vision.ImageAnnotatorClient(credentials=credentials)
-# translate_client = translate.Client(credentials=credentials)
+translate_client = translate.Client(credentials=credentials)
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-def detect_texts_google_cloud(content):
-    """Detects text in the file."""
-    image = vision.Image(content=content)
-    response = client.text_detection(image=image)
-    texts = response.text_annotations
-    predict_des = ""
-    for text in texts:
-        predict_des = text.description
-        predict_des = predict_des.strip()
-        return predict_des
-
-    return predict_des
+# def detect_texts_google_cloud(content):
+#     """Detects text in the file."""
+#     image = vision.Image(content=content)
+#     response = client.text_detection(image=image)
+#     texts = response.text_annotations
+#     predict_des = ""
+#     for text in texts:
+#         predict_des = text.description
+#         predict_des = predict_des.strip()
+#         return predict_des
+#
+#     return predict_des
 
 
 def detect_texts(img_path):
@@ -100,7 +101,7 @@ def detect_texts(img_path):
     return ""
 
 
-def translate_text_google_cloud(target, text):
+def translate_text_google_cloud(target='vi', text=''):
     """Translates text into the target language.
 
     Target must be an ISO 639-1 language code.
@@ -111,7 +112,7 @@ def translate_text_google_cloud(target, text):
 
     # Text can also be a sequence of strings, in which case this method
     # will return a sequence of results for each text.
-    result = translate_client.translate(text, target_language=target)
+    result = translate_client.translate(text, target_language=target, source_language='ch')
 
     # print(u"Text: {}".format(result["input"]))
     # print(u"Translation: {}".format(result["translatedText"]))
@@ -167,7 +168,7 @@ def generate_subtitles(
             if old_des != "" and (description != old_des or description == ""):
                 list_srt.append({
                     "description": old_des,
-                    "translate": translate_text(dst_language, old_des),
+                    "translate": translate_text_google_cloud(dst_language, old_des),
                     "first_time": prev_time_ts,
                     "last_time": current_time_ts,
                     "sub_idx": sub_idx
