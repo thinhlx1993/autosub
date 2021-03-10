@@ -161,7 +161,10 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
                 sub_idx += 1
                 prev_time = start_time
 
-            old_des = description
+            if old_des == "" and description != "":
+                prev_time = start_time
+                old_des = description
+
             # cv2.imshow('none', crop_img)
             # cv2.waitKey(1)
             start_time += time_per_frame * 12
