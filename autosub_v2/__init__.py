@@ -158,7 +158,7 @@ def generate_subtitles(
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
             current_time_ts = datetime.utcfromtimestamp(current_time).strftime('%H:%M:%S,%f')[:-4]
             h, w, c = frame.shape
-            crop_img = frame[int(h * 0.94):h, 0:w]
+            crop_img = frame[int(h * 0.92):h, 0:w]
             cv2.imshow('demo', crop_img)
             cv2.waitKey(1)
             # success, encoded_image = cv2.imencode('.jpg', crop_img)
