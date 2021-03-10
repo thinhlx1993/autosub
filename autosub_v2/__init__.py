@@ -6,33 +6,44 @@ Defines autosub's main functionality.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import time
 import argparse
-import audioop
-import math
-import multiprocessing
+# import audioop
+# import math
+# import multiprocessing
 import cv2
 import os
-import subprocess
+# import subprocess
 import sys
-import tempfile
-import wave
-import json
-import requests
+# import tempfile
+# import wave
+# import json
+# import requests
 from datetime import datetime
 try:
     from json.decoder import JSONDecodeError
 except ImportError:
     JSONDecodeError = ValueError
 
-from googleapiclient.discovery import build
-from progressbar import ProgressBar, Percentage, Bar, ETA
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+# from googleapiclient.discovery import build
+# from progressbar import ProgressBar, Percentage, Bar, ETA
 
 from autosub_v2.constants import (
     LANGUAGE_CODES, GOOGLE_SPEECH_API_KEY, GOOGLE_SPEECH_API_URL,
 )
 from autosub_v2.formatters import FORMATTERS
 from paddleocr import PaddleOCR
-ocr = PaddleOCR(lang='ch', use_gpu=True, rec_model_dir=r"C:\autosub_models") # need to run only once to load model into memory
+
+ocr = PaddleOCR(lang='ch', use_gpu=False,
+                rec_model_dir=r"C:\autosub_models\rec",
+                cls_model_dir=r"C:\autosub_models\cls",
+                det_model_dir=r"C:\autosub_models\det",
+                use_angle_cls=True,
+                rec_char_type='ch',
+                drop_score=0.8,
+                det_db_box_thresh=0.3,
+                cls=True)
 
 DEFAULT_SUBTITLE_FORMAT = 'srt'
 DEFAULT_CONCURRENCY = 10
@@ -83,7 +94,9 @@ def detect_texts(img_path):
     """Detects text in the file."""
     result = ocr.ocr(img_path, det=False, rec=True, cls=False)
     for line in result:
-        return line[0]
+        # print(line[0])
+        if line[1] > 0.7:
+            return line[0]
     return ""
 
 
@@ -115,40 +128,40 @@ def translate_text(target, text):
     return text
 
 
-def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
+def generate_subtitles(
         source_path,
         output=None,
-        concurrency=DEFAULT_CONCURRENCY,
-        src_language=DEFAULT_SRC_LANGUAGE,
-        dst_language=DEFAULT_DST_LANGUAGE,
-        subtitle_file_format=DEFAULT_SUBTITLE_FORMAT,
-        api_key=None,
+        dst_language=DEFAULT_DST_LANGUAGE
     ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
     """
     # Opens the Video file
+    print("starting")
     cap = cv2.VideoCapture(source_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
     time_per_frame = 1 / fps
     i = 0
+    div_frame = 12
     sub_idx = 1
     list_srt = []
     old_des = ""
     prev_time = 0
-    start_time = 0
+    current_time = 0
     file_name = os.path.basename(source_path)
     while (cap.isOpened()):
         ret, frame = cap.read()
         if ret == False:
             break
-        if i % 12 == 0:
+        if i % div_frame == 0:
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
-            start_time_ts = datetime.utcfromtimestamp(start_time).strftime('%H:%M:%S,%f')[:-4]
+            current_time_ts = datetime.utcfromtimestamp(current_time).strftime('%H:%M:%S,%f')[:-4]
             h, w, c = frame.shape
             crop_img = frame[int(h * 0.94):h, 0:w]
-            success, encoded_image = cv2.imencode('.jpg', crop_img)
-            cv2.imwrite('tmp.jpg', encoded_image)
+            cv2.imshow('demo', crop_img)
+            cv2.waitKey(1)
+            # success, encoded_image = cv2.imencode('.jpg', crop_img)
+            cv2.imwrite('tmp.jpg', crop_img)
             description = detect_texts('tmp.jpg')
 
             if old_des != "" and (description != old_des or description == ""):
@@ -156,7 +169,7 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
                     "description": old_des,
                     "translate": translate_text(dst_language, old_des),
                     "first_time": prev_time_ts,
-                    "last_time": start_time_ts,
+                    "last_time": current_time_ts,
                     "sub_idx": sub_idx
                 })
                 # with open(f"{os.path.splitext(file_name)[0]}_raw.srt", "a", encoding="utf-8") as myfile:
@@ -180,15 +193,13 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
                 print('\n')
 
                 sub_idx += 1
-                prev_time = start_time
+                prev_time = current_time
 
-            if old_des == "" and description != "":
-                prev_time = start_time
-                old_des = description
+            if description == "":
+                prev_time = current_time
 
-            # cv2.imshow('none', crop_img)
-            # cv2.waitKey(1)
-            start_time += time_per_frame * 12
+            old_des = description
+            current_time += time_per_frame * div_frame
 
         i += 1
 
@@ -272,16 +283,13 @@ def main():
         return 1
 
     try:
+        st = time.time()
         subtitle_file_path = generate_subtitles(
             source_path=args.source_path,
-            concurrency=args.concurrency,
-            src_language=args.src_language,
             dst_language=args.dst_language,
-            api_key=args.api_key,
-            subtitle_file_format=args.format,
             output=args.output,
         )
-        print("Subtitles file created at {}".format(subtitle_file_path))
+        print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
     except KeyboardInterrupt:
         return 1
 
