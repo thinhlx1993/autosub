@@ -158,12 +158,12 @@ def generate_subtitles(
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
             current_time_ts = datetime.utcfromtimestamp(current_time).strftime('%H:%M:%S,%f')[:-4]
             h, w, c = frame.shape
-            crop_img = frame[int(h * 0.92):h, 0:w]
-            # cv2.imshow('demo', crop_img)
-            # cv2.waitKey(1)
+            crop_img = frame[int(h * 0.90):h, 0:w]
+            cv2.imshow('demo', crop_img)
+            cv2.waitKey(1)
             # success, encoded_image = cv2.imencode('.jpg', crop_img)
             cv2.imwrite('tmp.jpg', crop_img)
-            description = detect_texts('tmp.jpg')
+            description = detect_texts(crop_img)
 
             if old_des != "" and (description != old_des or description == ""):
                 list_srt.append({
@@ -265,6 +265,12 @@ def main():
                         action='store_true')
     parser.add_argument('--list-languages', help="List all available source/destination languages",
                         action='store_true')
+
+    parser.add_argument('--from', help="minimum height")
+
+    parser.add_argument('--to', help="maximum height")
+
+    parser.add_argument('--debug', help="Allows to show cropped image on the desktop")
 
     args = parser.parse_args()
 
