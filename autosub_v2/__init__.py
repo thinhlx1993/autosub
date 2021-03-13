@@ -266,11 +266,11 @@ def main():
     parser.add_argument('--list-languages', help="List all available source/destination languages",
                         action='store_true')
 
-    parser.add_argument('--from', help="minimum height")
+    parser.add_argument('-F', '--from', help="minimum height", type=float, default=0.9)
 
-    parser.add_argument('--to', help="maximum height")
+    parser.add_argument('-T', '--to', help="maximum height", type=float, default=1.0)
 
-    parser.add_argument('--debug', help="Allows to show cropped image on the desktop")
+    parser.add_argument('-D', '--debug', help="Allows to show cropped image on the desktop", default=False, type=bool)
 
     args = parser.parse_args()
 
