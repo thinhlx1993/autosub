@@ -105,7 +105,8 @@ def translate_text(target, text):
 def generate_subtitles(
         source_path,
         output=None,
-        dst_language=DEFAULT_DST_LANGUAGE
+        dst_language=DEFAULT_DST_LANGUAGE,
+        debug=False
     ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
@@ -131,9 +132,10 @@ def generate_subtitles(
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
             current_time_ts = datetime.utcfromtimestamp(current_time).strftime('%H:%M:%S,%f')[:-4]
             h, w, c = frame.shape
-            crop_img = frame[int(h * 0.92):h, 0:w]
-            # cv2.imshow('demo', crop_img)
-            # cv2.waitKey(1)
+            crop_img = frame[int(h * 0.94):h, 0:w]
+            if debug:
+                cv2.imshow('demo', crop_img)
+                cv2.waitKey(1)
             # success, encoded_image = cv2.imencode('.jpg', crop_img)
             # cv2.imwrite('tmp.jpg', crop_img)
             description = detect_texts(crop_img)
@@ -239,11 +241,11 @@ def main():
     parser.add_argument('--list-languages', help="List all available source/destination languages",
                         action='store_true')
 
-    parser.add_argument('-F', '--from', help="minimum height", type=float, default=0.9)
+    parser.add_argument('--from', help="minimum height", type=float, default=0.9)
 
-    parser.add_argument('-T', '--to', help="maximum height", type=float, default=1.0)
+    parser.add_argument('--to', help="maximum height", type=float, default=1.0)
 
-    parser.add_argument('-D', '--debug', help="Allows to show cropped image on the desktop", default=False, type=bool)
+    parser.add_argument('--debug', help="Allows to show cropped image on the desktop", action='store_true')
 
     args = parser.parse_args()
 
@@ -268,6 +270,7 @@ def main():
             source_path=args.source_path,
             dst_language=args.dst_language,
             output=args.output,
+            debug=args.debug
         )
         print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
     except KeyboardInterrupt:
