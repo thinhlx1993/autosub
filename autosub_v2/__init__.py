@@ -1,24 +1,13 @@
 """
 Defines autosub's main functionality.
 """
-
-#!/usr/bin/env python
-
 from __future__ import absolute_import, print_function, unicode_literals
 
 import time
 import argparse
-import audioop
-import math
-import multiprocessing
 import cv2
 import os
-# import subprocess
 import sys
-import tempfile
-import wave
-import json
-import requests
 from datetime import datetime
 try:
     from json.decoder import JSONDecodeError
@@ -26,8 +15,6 @@ except ImportError:
     JSONDecodeError = ValueError
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-from googleapiclient.discovery import build
-from progressbar import ProgressBar, Percentage, Bar, ETA
 
 from autosub_v2.constants import (
     LANGUAGE_CODES, GOOGLE_SPEECH_API_KEY, GOOGLE_SPEECH_API_URL,
@@ -53,24 +40,10 @@ DEFAULT_DST_LANGUAGE = 'vi'
 
 import six
 from google.oauth2 import service_account
-from google.cloud import vision
 from google.cloud import translate_v2 as translate
 
-account_info = {
-    "type": "service_account",
-    "project_id": "iconic-era-306703",
-    "private_key_id": "77b1f06485345d49bb49d7c9299456fb71303ab3",
-    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDhWfJc9tZGHxlj\n19+m5aX/wLvZ671d3SSKDPmrDtIkIi1RxvSOMVbb/0mSUlOcrbi+2CVg6l0MASCt\n1k23mq4vDpPOBfPHY9OxwMVi499NkaBKf050g/l1Bnw3VIi3uu4EJaWQuFcoAXeS\nrVFHTP6JgB3V/iQSGG/gjEdIwvsTakSy4DOMAhitavYLU/fIIipDEwBOlL5tbQ+p\nxSRgA7Dpsr2FLM8gDWASTm6LoGVvpL/N11uuSrcKD9P/HWQyA+PI9S9PQWKRjkPo\n/S9A9oQgRMUEloj5QZHMqh9mpeEuoup6FqE1LfH7auNPmLyWvAwygw031Igqm0tk\nzCTGbw3bAgMBAAECggEAWsdxpzp2UfQYNczSFzj+uHrLEbvx4lyB6izU7LBBPfYY\nnI9Rl/BPRbtex1drwDuJJzQKRrLSfdH8eJrSXuqsTV+Jch6auBFCR6JYwX/7RhOq\nZyhGkhBSDu7oXh+rHZxrYndJ7XUdAwwoP4mbKuZcyUY3fqtsm2+FrgbEdo65NvXA\nCplWeDAujGSADMszX5tFii+uWbDEVrvNkvAwCpTv+PEclseFTKaLbhtMejeoHW0z\n1QbLDx2mCcYvIHQ52GGMFHsVHdfEYT/WFLWd5YnjX6KmY2kCFtQ6cWJ3Qo6FMUgF\nnYx/22G7S0GdYybzfqE2XnGUar0HR/Aoe25R2UkdtQKBgQD4qOCqGmDd2YF3DEI6\nP/m9epcSfJfmV4ZSLJ9VNo7nzVd/8swXpZBw2nqQizUeP4Rim5EH1gNbB5PVSumU\nX5hcBfdAOHc9DNNjexEeQQNR4JOPsMAN2BzVtgqP2hgZjkjBoHninIcd++29o4ga\nvvMyaKJ2/bD6jVjbsrxW/OF8HQKBgQDoAO2Sq4wX5jRhTA8xfiUCn4XRwRDN/IEK\ny00exRq3alFYOrQH3jYWxRGbFrwi6Br13rxWKcryukPwU7w/Xi5M4ytMpjESKJ96\n5NY1dU11rNgHd0kRYfuaaQv+X5ZNBG0AXYL+4KANnwumVNMV1In7TJXrBvqqn1++\n4O7dst9gVwKBgBq482P0b8KHtG0ZySg/ZdRiD0gyUZS0hT/hgcIDmfn5TFT4v8wu\nw8YNBKzx+ORmSRDbzQs9iaDHwLBkW5PRbis9jOO+7bmG3lTLjfxlWjj7XIBNq2YR\neo/Q/3OUKZDdhJ4iY9bhoXesclE1+NN+/93D9um4u8NBW3JI1Aq5JHZVAoGACBtQ\nMdnQsV0X43Z26XHQ9UCBuoyWe7wg/jGQZkzY3CPY585VUBkRpsYIEXU/6bBWkNTR\nm+kl8ElV6mXipAw0bfdaIfmEqW/F8tNgMMoChOQfQFOIuBTGZ+TXyHGqnNJUxLh/\nxUwwC4nNLGi2X4Lnt2I7stSxmZisDc1qS1DewU0CgYEA58RFBSp7v+rklgppKEq8\nP2H901xvB+KA8dX0Mt1uadIu7BuAw9oWxr8Kj1Vs0gtyU2OkIpMwx5xYu7YXYIFA\n4YcIj8r8YOpimATyyE5nzKmH5gkPkev3XZyFQ0fyng77ZME+/ng2cex+kCuM1KuK\nh5tYaUSRTWyUJR/YzKNi/Ao=\n-----END PRIVATE KEY-----\n",
-    "client_email": "default@iconic-era-306703.iam.gserviceaccount.com",
-    "client_id": "116179332925558425360",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/default%40iconic-era-306703.iam.gserviceaccount.com"
-}
 
-
-credentials = service_account.Credentials.from_service_account_info(account_info)
+credentials = service_account.Credentials.from_service_account_file(r"C:\autosub_models\key.json")
 # client = vision.ImageAnnotatorClient(credentials=credentials)
 translate_client = translate.Client(credentials=credentials)
 # Press Shift+F10 to execute it or replace it with your code.
@@ -158,11 +131,11 @@ def generate_subtitles(
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
             current_time_ts = datetime.utcfromtimestamp(current_time).strftime('%H:%M:%S,%f')[:-4]
             h, w, c = frame.shape
-            crop_img = frame[int(h * 0.90):h, 0:w]
-            cv2.imshow('demo', crop_img)
-            cv2.waitKey(1)
+            crop_img = frame[int(h * 0.92):h, 0:w]
+            # cv2.imshow('demo', crop_img)
+            # cv2.waitKey(1)
             # success, encoded_image = cv2.imencode('.jpg', crop_img)
-            cv2.imwrite('tmp.jpg', crop_img)
+            # cv2.imwrite('tmp.jpg', crop_img)
             description = detect_texts(crop_img)
 
             if old_des != "" and (description != old_des or description == ""):
