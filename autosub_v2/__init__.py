@@ -142,8 +142,8 @@ def generate_subtitles(
 
             description = ""
             if cloud:
-                success, encoded_image = cv2.imencode('.jpg', crop_img)
-                description = detect_texts_google_cloud(encoded_image)
+                # success, encoded_image = cv2.imencode('.jpg', crop_img)
+                description = detect_texts_google_cloud(crop_img)
             else:
                 result = ocr.ocr(crop_img, det=False, rec=True, cls=False)
                 for line in result:
