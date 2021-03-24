@@ -105,7 +105,7 @@ def generate_subtitles(
     """
     # Opens the Video file
     print(f"starting: using cloud {cloud}")
-    if cloud:
+    if not cloud:
         ocr = PaddleOCR(lang='ch', use_gpu=False,
                         rec_model_dir=r"C:\autosub_models\rec",
                         cls_model_dir=r"C:\autosub_models\cls",
