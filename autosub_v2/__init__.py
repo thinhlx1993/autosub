@@ -22,15 +22,6 @@ from autosub_v2.constants import (
 from autosub_v2.formatters import FORMATTERS
 from paddleocr import PaddleOCR
 
-ocr = PaddleOCR(lang='ch', use_gpu=False,
-                rec_model_dir=r"C:\autosub_models\rec",
-                cls_model_dir=r"C:\autosub_models\cls",
-                det_model_dir=r"C:\autosub_models\det",
-                use_angle_cls=True,
-                rec_char_type='ch',
-                drop_score=0.8,
-                det_db_box_thresh=0.3,
-                cls=True)
 
 DEFAULT_SUBTITLE_FORMAT = 'srt'
 DEFAULT_CONCURRENCY = 10
@@ -41,37 +32,37 @@ DEFAULT_DST_LANGUAGE = 'vi'
 import six
 from google.oauth2 import service_account
 from google.cloud import translate_v2 as translate
-
+from google.cloud import vision
 
 credentials = service_account.Credentials.from_service_account_file(r"C:\autosub_models\key.json")
-# client = vision.ImageAnnotatorClient(credentials=credentials)
+client = vision.ImageAnnotatorClient(credentials=credentials)
 translate_client = translate.Client(credentials=credentials)
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-# def detect_texts_google_cloud(content):
-#     """Detects text in the file."""
-#     image = vision.Image(content=content)
-#     response = client.text_detection(image=image)
-#     texts = response.text_annotations
-#     predict_des = ""
-#     for text in texts:
-#         predict_des = text.description
-#         predict_des = predict_des.strip()
-#         return predict_des
-#
-#     return predict_des
-
-
-def detect_texts(img_path):
+def detect_texts_google_cloud(content):
     """Detects text in the file."""
-    result = ocr.ocr(img_path, det=False, rec=True, cls=False)
-    for line in result:
-        # print(line[0])
-        if line[1] > 0.7:
-            return line[0]
-    return ""
+    image = vision.Image(content=content)
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+    predict_des = ""
+    for text in texts:
+        predict_des = text.description
+        predict_des = predict_des.strip()
+        return predict_des
+
+    return predict_des
+
+
+# def detect_texts(img_path, ocr):
+#     """Detects text in the file."""
+#     result = ocr.ocr(img_path, det=False, rec=True, cls=False)
+#     for line in result:
+#         # print(line[0])
+#         if line[1] > 0.7:
+#             return line[0]
+#     return ""
 
 
 def translate_text_google_cloud(target, text):
@@ -106,13 +97,25 @@ def generate_subtitles(
         source_path,
         output=None,
         dst_language=DEFAULT_DST_LANGUAGE,
-        debug=False
+        debug=False,
+        cloud=False
     ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
     """
     # Opens the Video file
     print("starting")
+    if cloud:
+        ocr = PaddleOCR(lang='ch', use_gpu=False,
+                        rec_model_dir=r"C:\autosub_models\rec",
+                        cls_model_dir=r"C:\autosub_models\cls",
+                        det_model_dir=r"C:\autosub_models\det",
+                        use_angle_cls=True,
+                        rec_char_type='ch',
+                        drop_score=0.8,
+                        det_db_box_thresh=0.3,
+                        cls=True)
+
     cap = cv2.VideoCapture(source_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
     time_per_frame = 1 / fps
@@ -136,9 +139,18 @@ def generate_subtitles(
             if debug:
                 cv2.imshow('demo', crop_img)
                 cv2.waitKey(1)
-            # success, encoded_image = cv2.imencode('.jpg', crop_img)
-            # cv2.imwrite('tmp.jpg', crop_img)
-            description = detect_texts(crop_img)
+
+            description = ""
+            if cloud:
+                success, encoded_image = cv2.imencode('.jpg', crop_img)
+                description = detect_texts_google_cloud(encoded_image)
+            else:
+                result = ocr.ocr(crop_img, det=False, rec=True, cls=False)
+                for line in result:
+                    # print(line[0])
+                    if line[1] > 0.7:
+                        description = line[0]
+                        break
 
             if old_des != "" and (description != old_des or description == ""):
                 list_srt.append({
@@ -247,6 +259,8 @@ def main():
 
     parser.add_argument('--debug', help="Allows to show cropped image on the desktop", action='store_true')
 
+    parser.add_argument('--cloud', help="Use google cloud compute to extract text", action='store_true')
+
     args = parser.parse_args()
 
     if args.list_formats:
@@ -270,7 +284,8 @@ def main():
             source_path=args.source_path,
             dst_language=args.dst_language,
             output=args.output,
-            debug=args.debug
+            debug=args.debug,
+            cloud=args.cloud
         )
         print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
     except KeyboardInterrupt:
