@@ -104,7 +104,7 @@ def generate_subtitles(
     Given an input audio/video file, generate subtitles in the specified language and format.
     """
     # Opens the Video file
-    print("starting")
+    print(f"starting: using cloud {cloud}")
     if cloud:
         ocr = PaddleOCR(lang='ch', use_gpu=False,
                         rec_model_dir=r"C:\autosub_models\rec",
