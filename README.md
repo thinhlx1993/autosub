@@ -45,3 +45,12 @@ optional arguments:
 ### License
 
 MIT
+
+# Demo
+
+`
+#echo off
+
+for %%f in (*.avi *.flv *.mkv *.mpg *.mp4 *.webm) do (
+	autosub_v2 "%%f" -D en
+`
