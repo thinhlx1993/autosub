@@ -53,9 +53,7 @@ MIT
 # Demo
 
 ```
-
 @echo off
 chcp 936
 autosub_v2 "%%f" -D en --cloud
-
 ```
