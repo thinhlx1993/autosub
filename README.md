@@ -55,9 +55,7 @@ MIT
 ```
 
 @echo off
-chcp 65001
-for %%f in (*.avi *.flv *.mkv *.mpg *.mp4 *.webm) do (
-	autosub_v2 "%%f" -D en --cloud
-)
+chcp 936
+autosub_v2 "%%f" -D en --cloud
 
 ```
