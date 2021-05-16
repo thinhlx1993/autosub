@@ -98,13 +98,14 @@ def generate_subtitles(
         output=None,
         dst_language=DEFAULT_DST_LANGUAGE,
         debug=False,
-        cloud=False
+        cloud=False,
+        disable_time=False
     ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
     """
     # Opens the Video file
-    print(f"starting: using cloud {cloud}")
+    print(f"starting: using cloud {cloud}, source_path {source_path}")
     if not cloud:
         ocr = PaddleOCR(lang='ch', use_gpu=False,
                         rec_model_dir=r"C:\autosub_models\rec",
@@ -135,7 +136,7 @@ def generate_subtitles(
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
             current_time_ts = datetime.utcfromtimestamp(current_time).strftime('%H:%M:%S,%f')[:-4]
             h, w, c = frame.shape
-            crop_img = frame[int(h * 0.94):h, 0:w]
+            crop_img = frame[int(h * 0.9):h, 0:w]
             if debug:
                 cv2.imshow('demo', crop_img)
                 cv2.waitKey(1)
@@ -166,10 +167,11 @@ def generate_subtitles(
                 #     myfile.write(f"{list_srt[-1]['description']}\n")
                 #     myfile.write('\n')
                 #     myfile.close()
-
-                with open(f"{os.path.splitext(file_name)[0]}.srt", "a", encoding="utf-8") as myfile_vi:
-                    myfile_vi.write(f"{list_srt[-1]['sub_idx']}\n")
-                    myfile_vi.write(f"{list_srt[-1]['first_time']} --> {list_srt[-1]['last_time']}\n")
+                extenstion = ".srt" if not disable_time else ".txt"
+                with open(f"{os.path.splitext(file_name)[0]}{extenstion}", "a", encoding="utf-8") as myfile_vi:
+                    if not disable_time:
+                        myfile_vi.write(f"{list_srt[-1]['sub_idx']}\n")
+                        myfile_vi.write(f"{list_srt[-1]['first_time']} --> {list_srt[-1]['last_time']}\n")
                     myfile_vi.write(f"{list_srt[-1]['translate']}\n")
                     myfile_vi.write('\n')
                     myfile_vi.close()
@@ -261,6 +263,8 @@ def main():
 
     parser.add_argument('--cloud', help="Use google cloud compute to extract text", action='store_true')
 
+    parser.add_argument('--disable_time', help="Parse time function", action='store_true')
+
     args = parser.parse_args()
 
     if args.list_formats:
@@ -280,13 +284,17 @@ def main():
 
     try:
         st = time.time()
-        subtitle_file_path = generate_subtitles(
-            source_path=args.source_path,
-            dst_language=args.dst_language,
-            output=args.output,
-            debug=args.debug,
-            cloud=args.cloud
-        )
+        for file in os.listdir():
+            # *.avi *.flv *.mkv *.mpg *.mp4 *.webm
+            if file.endswith('.avi') or file.endswith('.flv') or file.endswith('.mkv') or file.endswith('.mpg') or file.endswith('.mp4') or file.endswith(".webm"):
+                subtitle_file_path = generate_subtitles(
+                    source_path=file,
+                    dst_language=args.dst_language,
+                    output=args.output,
+                    debug=args.debug,
+                    cloud=args.cloud,
+                    disable_time=args.disable_time
+                )
         print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
     except KeyboardInterrupt:
         return 1
