@@ -7,9 +7,13 @@ Autosub is a utility for automatic speech recognition and subtitle generation. I
 ### Installation
 
 1. Install [ffmpeg](https://www.ffmpeg.org/).
-2. Run `pip install autosub`.
+2. `python -m pip install paddlepaddle==2.0.0 -i https://mirror.baidu.com/pypi/simple`
+3. `pip install grpcio`
+4. Run `pip install .`.
 
 ### Usage
+
+
 
 ```
 $ autosub -h
@@ -49,7 +53,7 @@ MIT
 # Demo
 
 `
-#echo off
+@echo off
 
 for %%f in (*.avi *.flv *.mkv *.mpg *.mp4 *.webm) do (
 	autosub_v2 "%%f" -D en
