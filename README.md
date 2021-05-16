@@ -52,10 +52,12 @@ MIT
 
 # Demo
 
-`
-@echo off
+```
 
+@echo off
+chcp 65001
 for %%f in (*.avi *.flv *.mkv *.mpg *.mp4 *.webm) do (
-	autosub_v2 "%%f" -D en
+	autosub_v2 "%%f" -D en --cloud
 )
-`
+
+```
