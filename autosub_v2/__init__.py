@@ -23,12 +23,23 @@ from autosub_v2.constants import (
 from autosub_v2.formatters import FORMATTERS
 from paddleocr import PaddleOCR
 
+def nothing(x):
+    pass
 
+
+cv2.namedWindow("Trackbars")
 DEFAULT_SUBTITLE_FORMAT = 'srt'
 DEFAULT_CONCURRENCY = 10
 DEFAULT_SRC_LANGUAGE = 'en'
 DEFAULT_DST_LANGUAGE = 'vi'
-
+# cv2.createTrackbar("L - H", "Trackbars", 0, 179, nothing)
+# cv2.createTrackbar("L - S", "Trackbars", 0, 255, nothing)
+# cv2.createTrackbar("L - V", "Trackbars", 0, 255, nothing)
+# cv2.createTrackbar("U - H", "Trackbars", 179, 179, nothing)
+# cv2.createTrackbar("U - S", "Trackbars", 255, 255, nothing)
+# cv2.createTrackbar("U - V", "Trackbars", 255, 255, nothing)
+cv2.createTrackbar("Min height", "Trackbars", 80, 100, nothing)
+cv2.createTrackbar("Max Height", "Trackbars", 100, 100, nothing)
 
 import six
 from google.oauth2 import service_account
@@ -100,9 +111,7 @@ def generate_subtitles(
         dst_language=DEFAULT_DST_LANGUAGE,
         debug=False,
         cloud=False,
-        disable_time=False,
-        min_height=0.9,
-        max_height=1
+        disable_time=False
     ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
@@ -140,11 +149,17 @@ def generate_subtitles(
         ret, frame = cap.read()
         if ret == False:
             break
+
+        min_height = cv2.getTrackbarPos("Min height", "Trackbars")
+        max_height = cv2.getTrackbarPos("Max Height", "Trackbars")
+        if max_height == 0:
+            max_height = 10
+
         if i % div_frame == 0:
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
             current_time_ts = datetime.utcfromtimestamp(current_time).strftime('%H:%M:%S,%f')[:-4]
             h, w, c = frame.shape
-            crop_img = frame[int(h * min_height):int(h * max_height), 0:w]
+            crop_img = frame[int(h * min_height/100):int(h * max_height/100), 0:w]
             hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
 
             # define range of white color in HSV
@@ -157,7 +172,7 @@ def generate_subtitles(
             # Bitwise-AND mask and original image
             crop_img = cv2.bitwise_and(crop_img, crop_img, mask=mask)
             if debug:
-                cv2.imshow('demo', crop_img)
+                cv2.imshow('Trackbars', crop_img)
                 cv2.waitKey(1)
 
             description = ""
@@ -315,9 +330,7 @@ def main():
                     output=args.output,
                     debug=args.debug,
                     cloud=args.cloud,
-                    disable_time=args.disable_time,
-                    max_height=args.max_height,
-                    min_height=args.min_height
+                    disable_time=args.disable_time
                 )
                 print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
     except KeyboardInterrupt:
