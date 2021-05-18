@@ -9,6 +9,7 @@ import cv2
 import os
 import sys
 from datetime import datetime
+import numpy as np
 try:
     from json.decoder import JSONDecodeError
 except ImportError:
@@ -44,12 +45,12 @@ translate_client = translate.Client(credentials=credentials)
 def detect_texts_google_cloud(content):
     """Detects text in the file."""
     image = vision.Image(content=content)
-    response = client.text_detection(image=image)
+    response = client.text_detection(image=image, image_context={"language_hints": ["zh"]})
     texts = response.text_annotations
     predict_des = ""
     for text in texts:
         predict_des = text.description
-        predict_des = predict_des.strip()
+        predict_des = predict_des.strip().replace("-", "")
         return predict_des
 
     return predict_des
@@ -99,7 +100,9 @@ def generate_subtitles(
         dst_language=DEFAULT_DST_LANGUAGE,
         debug=False,
         cloud=False,
-        disable_time=False
+        disable_time=False,
+        min_height=0.9,
+        max_height=1
     ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
@@ -119,15 +122,20 @@ def generate_subtitles(
 
     cap = cv2.VideoCapture(source_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
+    print(f"fps {fps}")
     time_per_frame = 1 / fps
     i = 0
-    div_frame = 12
+    div_frame = 12  # 5 frame /s
     sub_idx = 1
     list_srt = []
     old_des = ""
     prev_time = 0
     current_time = 0
     file_name = os.path.basename(source_path)
+    extenstion = ".srt" if not disable_time else ".txt"
+    filesub = f"{os.path.splitext(file_name)[0]}{extenstion}"
+    if os.path.isfile(filesub):
+        os.remove(filesub)
     while (cap.isOpened()):
         ret, frame = cap.read()
         if ret == False:
@@ -136,7 +144,18 @@ def generate_subtitles(
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
             current_time_ts = datetime.utcfromtimestamp(current_time).strftime('%H:%M:%S,%f')[:-4]
             h, w, c = frame.shape
-            crop_img = frame[int(h * 0.9):h, 0:w]
+            crop_img = frame[int(h * min_height):int(h * max_height), 0:w]
+            hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
+
+            # define range of white color in HSV
+            # change it according to your need !
+            lower_white = np.array([0, 0, 248], dtype=np.uint8)
+            upper_white = np.array([179, 255, 255], dtype=np.uint8)
+
+            # Threshold the HSV image to get only white colors
+            mask = cv2.inRange(hsv, lower_white, upper_white)
+            # Bitwise-AND mask and original image
+            crop_img = cv2.bitwise_and(crop_img, crop_img, mask=mask)
             if debug:
                 cv2.imshow('demo', crop_img)
                 cv2.waitKey(1)
@@ -152,8 +171,11 @@ def generate_subtitles(
                     if line[1] > 0.7:
                         description = line[0]
                         break
+            prev_des = ""
+            if len(list_srt) > 0:
+                prev_des = list_srt[-1]
 
-            if old_des != "" and (description != old_des or description == ""):
+            if old_des != "" and (description != old_des or description == "") and (description != prev_des or len(list_srt) == 0):
                 list_srt.append({
                     "description": old_des,
                     "translate": translate_text_google_cloud(dst_language, old_des),
@@ -167,8 +189,8 @@ def generate_subtitles(
                 #     myfile.write(f"{list_srt[-1]['description']}\n")
                 #     myfile.write('\n')
                 #     myfile.close()
-                extenstion = ".srt" if not disable_time else ".txt"
-                with open(f"{os.path.splitext(file_name)[0]}{extenstion}", "a", encoding="utf-8") as myfile_vi:
+
+                with open(filesub, "a", encoding="utf-8") as myfile_vi:
                     if not disable_time:
                         myfile_vi.write(f"{list_srt[-1]['sub_idx']}\n")
                         myfile_vi.write(f"{list_srt[-1]['first_time']} --> {list_srt[-1]['last_time']}\n")
@@ -255,13 +277,13 @@ def main():
     parser.add_argument('--list-languages', help="List all available source/destination languages",
                         action='store_true')
 
-    parser.add_argument('--from', help="minimum height", type=float, default=0.9)
+    parser.add_argument('--min_height', help="minimum height", type=float, default=0.9)
 
-    parser.add_argument('--to', help="maximum height", type=float, default=1.0)
+    parser.add_argument('--max_height', help="maximum height", type=float, default=1.0)
 
-    parser.add_argument('--debug', help="Allows to show cropped image on the desktop", action='store_true')
+    parser.add_argument('--debug', help="Allows to show cropped image on the desktop", action='store_true', default=True)
 
-    parser.add_argument('--cloud', help="Use google cloud compute to extract text", action='store_true')
+    parser.add_argument('--cloud', help="Use google cloud compute to extract text", action='store_true', default=True)
 
     parser.add_argument('--disable_time', help="Parse time function", action='store_true')
 
@@ -293,9 +315,11 @@ def main():
                     output=args.output,
                     debug=args.debug,
                     cloud=args.cloud,
-                    disable_time=args.disable_time
+                    disable_time=args.disable_time,
+                    max_height=args.max_height,
+                    min_height=args.min_height
                 )
-        print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
+                print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
     except KeyboardInterrupt:
         return 1
 
