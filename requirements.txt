@@ -7,3 +7,4 @@ progressbar2>=3.34.3
 six>=1.11.0
 paddleocr>=2.0.0
 paddlepaddle==2.0.0
+google-cloud-texttospeech==2.3.0
