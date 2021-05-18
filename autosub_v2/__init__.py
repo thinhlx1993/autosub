@@ -320,10 +320,10 @@ def main():
         return 1
 
     try:
-        st = time.time()
         for file in os.listdir():
             # *.avi *.flv *.mkv *.mpg *.mp4 *.webm
             if file.endswith('.avi') or file.endswith('.flv') or file.endswith('.mkv') or file.endswith('.mpg') or file.endswith('.mp4') or file.endswith(".webm"):
+                st = time.time()
                 subtitle_file_path = generate_subtitles(
                     source_path=file,
                     dst_language=args.dst_language,
