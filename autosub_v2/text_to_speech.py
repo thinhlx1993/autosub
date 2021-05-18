@@ -31,6 +31,10 @@ def list_voices():
 
 
 if __name__ == '__main__':
+    """
+    Hthvuihi25997@gmail.com
+LbA3ufy1NEW
+tuanluc126@gmail.com"""
     # uk-UA-Standard-A
     # uk-UA-Wavenet-A
     # FEMALE, MALE
@@ -38,12 +42,12 @@ if __name__ == '__main__':
     # Instantiates a client
     client = texttospeech.TextToSpeechClient(credentials=credentials)
     # Set the text input to be synthesized
-    synthesis_input = texttospeech.SynthesisInput(text="Hello, World!")
+    synthesis_input = texttospeech.SynthesisInput(text="But every scene of it, every dialogue deeply reveals the philosophy of life")
 
     # Build the voice request, select the language code ("en-US") and the ssml
     # voice gender ("neutral")
     voice = texttospeech.VoiceSelectionParams(
-        language_code="en-US", ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
+        language_code="en-US", ssml_gender=texttospeech.SsmlVoiceGender.FEMALE, name="en-US-Wavenet-G"
     )
 
     # Select the type of audio file you want returned
