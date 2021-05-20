@@ -196,7 +196,7 @@ def generate_subtitles(
                 ratio = fuzz.ratio(description.lower(), prev_des.lower())
 
             if old_des != "" and (description != old_des or description == "")\
-                    and (description != prev_des or len(list_srt) == 0) and (ratio < 80 or ratio == 0):
+                    and (description != prev_des or len(list_srt) == 0) and (ratio < 70 or ratio == 0):
                 list_srt.append({
                     "description": old_des,
                     "translate": translate_text_google_cloud(dst_language, old_des),
