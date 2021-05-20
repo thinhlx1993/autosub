@@ -2,7 +2,7 @@
 Defines autosub's main functionality.
 """
 from __future__ import absolute_import, print_function, unicode_literals
-
+from fuzzywuzzy import fuzz
 import time
 import argparse
 import cv2
@@ -190,10 +190,13 @@ def generate_subtitles(
                         description = line[0]
                         break
             prev_des = ""
+            ratio = 0
             if len(list_srt) > 0:
-                prev_des = list_srt[-1]
+                prev_des = list_srt[-1]['description']
+                ratio = fuzz.ratio(description.lower(), prev_des.lower())
 
-            if old_des != "" and (description != old_des or description == "") and (description != prev_des or len(list_srt) == 0):
+            if old_des != "" and (description != old_des or description == "")\
+                    and (description != prev_des or len(list_srt) == 0) and (ratio < 80 or ratio == 0):
                 list_srt.append({
                     "description": old_des,
                     "translate": translate_text_google_cloud(dst_language, old_des),
@@ -220,6 +223,7 @@ def generate_subtitles(
                 print(f"{list_srt[-1]['first_time']} --> {list_srt[-1]['last_time']}\n")
                 print(f"{list_srt[-1]['description']}\n")
                 print(f"{list_srt[-1]['translate']}\n")
+                print(f"Similarity{ratio}\n")
                 print('\n')
 
                 sub_idx += 1
