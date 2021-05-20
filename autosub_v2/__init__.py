@@ -189,11 +189,12 @@ def generate_subtitles(
                     if line[1] > 0.7:
                         description = line[0]
                         break
+
+            description = "" if len(description) < 6 else description
             prev_des = ""
-            ratio = 0
+            ratio = fuzz.ratio(description.lower(), old_des.lower())
             if len(list_srt) > 0:
                 prev_des = list_srt[-1]['description']
-                ratio = fuzz.ratio(description.lower(), prev_des.lower())
 
             if old_des != "" and (description != old_des or description == "")\
                     and (description != prev_des or len(list_srt) == 0) and (ratio < 70 or ratio == 0):
