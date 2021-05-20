@@ -8,6 +8,7 @@ import argparse
 import cv2
 import os
 import sys
+import html
 from datetime import datetime
 import numpy as np
 try:
@@ -32,14 +33,6 @@ DEFAULT_SUBTITLE_FORMAT = 'srt'
 DEFAULT_CONCURRENCY = 10
 DEFAULT_SRC_LANGUAGE = 'en'
 DEFAULT_DST_LANGUAGE = 'vi'
-# cv2.createTrackbar("L - H", "Trackbars", 0, 179, nothing)
-# cv2.createTrackbar("L - S", "Trackbars", 0, 255, nothing)
-# cv2.createTrackbar("L - V", "Trackbars", 0, 255, nothing)
-# cv2.createTrackbar("U - H", "Trackbars", 179, 179, nothing)
-# cv2.createTrackbar("U - S", "Trackbars", 255, 255, nothing)
-# cv2.createTrackbar("U - V", "Trackbars", 255, 255, nothing)
-cv2.createTrackbar("Min height", "Trackbars", 80, 100, nothing)
-cv2.createTrackbar("Max Height", "Trackbars", 100, 100, nothing)
 
 import six
 from google.oauth2 import service_account
@@ -89,11 +82,11 @@ def translate_text_google_cloud(target, text):
     # Text can also be a sequence of strings, in which case this method
     # will return a sequence of results for each text.
     result = translate_client.translate(text, target_language=target)
-
+    result = html.unescape(result["translatedText"])
     # print(u"Text: {}".format(result["input"]))
-    print(u"Translation: {}".format(result["translatedText"]))
+    print("Translation: {}".format(result))
     # print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
-    return result["translatedText"]
+    return result
 
 
 def translate_text(target, text):
@@ -111,7 +104,10 @@ def generate_subtitles(
         dst_language=DEFAULT_DST_LANGUAGE,
         debug=False,
         cloud=False,
-        disable_time=False
+        disable_time=False,
+        min_height=80,
+        max_height=100,
+        l_v=240
     ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
@@ -130,6 +126,11 @@ def generate_subtitles(
                         cls=True)
 
     cap = cv2.VideoCapture(source_path)
+    # cap.set(3, 1280)
+    # cap.set(4, 720)
+    # cv2.createTrackbar("L - V", "Trackbars", 0, 100, nothing)
+    # cv2.createTrackbar("Min height", "Trackbars", 80, 100, nothing)
+    # cv2.createTrackbar("Max Height", "Trackbars", 100, 100, nothing)
     fps = cap.get(cv2.CAP_PROP_FPS)
     print(f"fps {fps}")
     time_per_frame = 1 / fps
@@ -150,10 +151,12 @@ def generate_subtitles(
         if ret == False:
             break
 
-        min_height = cv2.getTrackbarPos("Min height", "Trackbars")
-        max_height = cv2.getTrackbarPos("Max Height", "Trackbars")
-        if max_height == 0:
-            max_height = 10
+        # min_height = cv2.getTrackbarPos("Min height", "Trackbars")
+        # max_height = cv2.getTrackbarPos("Max Height", "Trackbars")
+        # if max_height < min_height:
+        #     max_height = min_height + 10
+
+        # l_v = cv2.getTrackbarPos("L - V", "Trackbars")
 
         if i % div_frame == 0:
             prev_time_ts = datetime.utcfromtimestamp(prev_time).strftime('%H:%M:%S,%f')[:-4]
@@ -164,7 +167,7 @@ def generate_subtitles(
 
             # define range of white color in HSV
             # change it according to your need !
-            lower_white = np.array([0, 0, 248], dtype=np.uint8)
+            lower_white = np.array([0, 0, l_v], dtype=np.uint8)
             upper_white = np.array([179, 255, 255], dtype=np.uint8)
 
             # Threshold the HSV image to get only white colors
@@ -292,9 +295,11 @@ def main():
     parser.add_argument('--list-languages', help="List all available source/destination languages",
                         action='store_true')
 
-    parser.add_argument('--min_height', help="minimum height", type=float, default=0.9)
+    parser.add_argument('--min_height', help="minimum height from 0 - 100%", type=float, default=85)
 
-    parser.add_argument('--max_height', help="maximum height", type=float, default=1.0)
+    parser.add_argument('--max_height', help="maximum height from 0 - 100%", type=float, default=100)
+
+    parser.add_argument('--l_v', help="Light sensitive", type=float, default=210)
 
     parser.add_argument('--debug', help="Allows to show cropped image on the desktop", action='store_true', default=True)
 
@@ -330,7 +335,10 @@ def main():
                     output=args.output,
                     debug=args.debug,
                     cloud=args.cloud,
-                    disable_time=args.disable_time
+                    disable_time=args.disable_time,
+                    min_height=args.min_height,
+                    max_height=args.max_height,
+                    l_v=args.l_v,
                 )
                 print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
     except KeyboardInterrupt:
