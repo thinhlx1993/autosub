@@ -183,11 +183,11 @@ def generate_subtitles(
                 success, encoded_image = cv2.imencode('.jpg', crop_img)
                 description = detect_texts_google_cloud(encoded_image.tobytes())
             else:
-                result = ocr.ocr(crop_img, det=False, rec=True, cls=False)
+                result = ocr.ocr(crop_img, det=False, rec=True, cls=True)
                 for line in result:
-                    # print(line[0])
-                    if line[1] > 0.7:
-                        description = line[0]
+                    # print(line)
+                    if line[1] > 0.9:
+                        description = html.unescape(line[0].strip())
                         break
 
             description = "" if len(description) < 6 else description
@@ -200,7 +200,7 @@ def generate_subtitles(
                     and (description != prev_des or len(list_srt) == 0) and (ratio < 70 or ratio == 0):
                 list_srt.append({
                     "description": old_des,
-                    "translate": translate_text_google_cloud(dst_language, old_des),
+                    "translate": translate_text(dst_language, old_des),
                     "first_time": prev_time_ts,
                     "last_time": current_time_ts,
                     "sub_idx": sub_idx
@@ -300,15 +300,15 @@ def main():
     parser.add_argument('--list-languages', help="List all available source/destination languages",
                         action='store_true')
 
-    parser.add_argument('--min_height', help="minimum height from 0 - 100%", type=float, default=85)
+    parser.add_argument('--min_height', help="minimum height from 0 - 100%", type=float, default=93)
 
-    parser.add_argument('--max_height', help="maximum height from 0 - 100%", type=float, default=100)
+    parser.add_argument('--max_height', help="maximum height from 0 - 100%", type=float, default=99)
 
     parser.add_argument('--l_v', help="Light sensitive", type=float, default=210)
 
     parser.add_argument('--debug', help="Allows to show cropped image on the desktop", action='store_true', default=True)
 
-    parser.add_argument('--cloud', help="Use google cloud compute to extract text", action='store_true', default=True)
+    parser.add_argument('--cloud', help="Use google cloud compute to extract text", action='store_true', default=False)
 
     parser.add_argument('--disable_time', help="Parse time function", action='store_true')
 
