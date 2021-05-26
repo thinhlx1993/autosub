@@ -32,9 +32,10 @@ def list_voices():
 
 if __name__ == '__main__':
     """
-    Hthvuihi25997@gmail.com
-LbA3ufy1NEW
-tuanluc126@gmail.com"""
+        Hthvuihi25997@gmail.com
+        LbA3ufy1NEW
+        tuanluc126@gmail.com
+    """
     # uk-UA-Standard-A
     # uk-UA-Wavenet-A
     # FEMALE, MALE
