@@ -135,7 +135,7 @@ def generate_subtitles(
     print(f"fps {fps}")
     time_per_frame = 1 / fps
     i = 0
-    div_frame = 12  # 5 frame /s
+    div_frame = 5  # 5 frame /s
     sub_idx = 1
     list_srt = []
     old_des = ""
@@ -185,9 +185,9 @@ def generate_subtitles(
             else:
                 result = ocr.ocr(crop_img, det=False, rec=True, cls=True)
                 for line in result:
-                    # print(line)
-                    if line[1] > 0.9:
-                        description = html.unescape(line[0].strip())
+                    # print(current_time_ts, line)
+                    if line[1] > 0.8:
+                        description = html.unescape(line[0].strip().replace('，', '').replace('、', '').replace('．', ''))
                         break
 
             description = "" if len(description) < 6 else description
@@ -196,8 +196,8 @@ def generate_subtitles(
             if len(list_srt) > 0:
                 prev_des = list_srt[-1]['description']
 
-            if old_des != "" and (description != old_des or description == "")\
-                    and (description != prev_des or len(list_srt) == 0) and (ratio < 70 or ratio == 0):
+            print(current_time_ts, description, ratio)
+            if (old_des != "" or description == "") and (ratio < 70) and current_time - prev_time > 0.5:
                 list_srt.append({
                     "description": old_des,
                     "translate": translate_text(dst_language, old_des),
