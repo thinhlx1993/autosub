@@ -42,8 +42,8 @@ setup(
         'pysrt>=1.0.1',
         'progressbar2>=3.34.3',
         'six>=1.11.0',
-        'paddleocr==2.0.0',
-        'paddlepaddle==2.0.0',
+        'paddleocr>=2.0.0',
+        'paddlepaddle>=2.0.0',
         'fuzzywuzzy==0.18.0'
     ],
     license=open("LICENSE").read()
