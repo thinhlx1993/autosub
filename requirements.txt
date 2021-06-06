@@ -1,4 +1,4 @@
-opencv-python
+opencv-python===4.2.0.32
 google-cloud-vision>=2.2.0
 google-cloud-translate>=3.0.2
 requests>=2.3.0

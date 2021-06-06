@@ -55,5 +55,5 @@ MIT
 ```
 @echo off
 chcp 936
-autosub_v2 "%%f" -D en --cloud
+autosub_v2 input.txt -D en --debug --min_height 85 --max_height 100 --l_v 240
 ```
