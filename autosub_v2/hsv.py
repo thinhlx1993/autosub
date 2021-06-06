@@ -10,9 +10,9 @@ def nothing(x):
 
 
 # Initializing the webcam feed.
-cap = cv2.VideoCapture(r"D:\Code\Minh\autosub\20世纪最伟大的电影，可惜与奥斯卡失之交臂，每次刷都有新感悟！.mp4")
-cap.set(3, 1280)
-cap.set(4, 720)
+cap = cv2.VideoCapture(r"E:\Facebook\Videos\农村暴利生意一年能挣几十万？有张车床就能干，靠它赚的盆满钵满.mp4")
+cap.set(3, 1024)
+cap.set(4, 768)
 
 # Create a window named trackbars.
 cv2.namedWindow("Trackbars")
@@ -31,10 +31,11 @@ cv2.createTrackbar("U - V", "Trackbars", 255, 255, nothing)
 while True:
 
     # Start reading the webcam feed frame by frame.
-    ret, frame = cap.read()
-    if not ret:
-        break
+    # ret, frame = cap.read()
+    # if not ret:
+    #     break
     # Flip the frame horizontally (Not required)
+    frame = cv2.imread("vlcsnap-2021-06-06-19h18m09s299.png")
     frame = cv2.flip(frame, 1)
 
     # Convert the BGR image to HSV image.

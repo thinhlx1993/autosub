@@ -28,7 +28,7 @@ def nothing(x):
     pass
 
 
-cv2.namedWindow("Trackbars")
+# cv2.namedWindow("Trackbars")
 DEFAULT_SUBTITLE_FORMAT = 'srt'
 DEFAULT_CONCURRENCY = 10
 DEFAULT_SRC_LANGUAGE = 'en'
@@ -135,7 +135,7 @@ def generate_subtitles(
     print(f"fps {fps}")
     time_per_frame = 1 / fps
     i = 0
-    div_frame = 5  # 5 frame /s
+    div_frame = 6  # 5 frame /s
     sub_idx = 1
     list_srt = []
     old_des = ""
@@ -167,26 +167,33 @@ def generate_subtitles(
 
             # define range of white color in HSV
             # change it according to your need !
-            lower_white = np.array([0, 0, l_v], dtype=np.uint8)
-            upper_white = np.array([179, 255, 255], dtype=np.uint8)
+            lower_white = np.array([0, 0, 246], dtype=np.uint8)
+            upper_white = np.array([157, 21, 255], dtype=np.uint8)
 
             # Threshold the HSV image to get only white colors
             mask = cv2.inRange(hsv, lower_white, upper_white)
             # Bitwise-AND mask and original image
             crop_img = cv2.bitwise_and(crop_img, crop_img, mask=mask)
-            if debug:
-                cv2.imshow('Trackbars', crop_img)
-                cv2.waitKey(1)
+            # crop_img = cv2.cvtColor(crop_img, cv2.COLOR_HSV2RGB)
+            # crop_img = cv2.cvtColor(crop_img, cv2.COLOR_RGB2GRAY)
 
             description = ""
             if cloud:
                 success, encoded_image = cv2.imencode('.jpg', crop_img)
                 description = detect_texts_google_cloud(encoded_image.tobytes())
             else:
-                result = ocr.ocr(crop_img, det=False, rec=True, cls=True)
+                # dst = cv2.fastNlMeansDenoisingColored(crop_img,None,10,10,7,21)
+                # stacked = np.hstack((dst, crop_img))
+                if debug:
+                    # cv2.imshow('dst', dst)
+                    cv2.imshow('crop_img', crop_img)
+                    cv2.imshow('frame', frame)
+                    cv2.waitKey(1)
+
+                result = ocr.ocr(crop_img, det=False, rec=True, cls=False)
                 for line in result:
                     # print(current_time_ts, line)
-                    if line[1] > 0.8:
+                    if line[1] > 0.7:
                         description = html.unescape(line[0].strip().replace('，', '').replace('、', '').replace('．', ''))
                         break
 
@@ -312,6 +319,8 @@ def main():
 
     parser.add_argument('--disable_time', help="Parse time function", action='store_true')
 
+    parser.add_argument('--all', help="Render all files", action='store_true')
+
     args = parser.parse_args()
 
     if args.list_formats:
@@ -330,22 +339,37 @@ def main():
         return 1
 
     try:
-        for file in os.listdir():
-            # *.avi *.flv *.mkv *.mpg *.mp4 *.webm
-            if file.endswith('.avi') or file.endswith('.flv') or file.endswith('.mkv') or file.endswith('.mpg') or file.endswith('.mp4') or file.endswith(".webm"):
-                st = time.time()
-                subtitle_file_path = generate_subtitles(
-                    source_path=file,
-                    dst_language=args.dst_language,
-                    output=args.output,
-                    debug=args.debug,
-                    cloud=args.cloud,
-                    disable_time=args.disable_time,
-                    min_height=args.min_height,
-                    max_height=args.max_height,
-                    l_v=args.l_v,
-                )
-                print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
+        if args.all:
+            for file in os.listdir():
+                # *.avi *.flv *.mkv *.mpg *.mp4 *.webm
+                if file.endswith('.avi') or file.endswith('.flv') or file.endswith('.mkv') or file.endswith('.mpg') or file.endswith('.mp4') or file.endswith(".webm"):
+                    st = time.time()
+                    subtitle_file_path = generate_subtitles(
+                        source_path=file,
+                        dst_language=args.dst_language,
+                        output=args.output,
+                        debug=args.debug,
+                        cloud=args.cloud,
+                        disable_time=args.disable_time,
+                        min_height=args.min_height,
+                        max_height=args.max_height,
+                        l_v=args.l_v,
+                    )
+                    print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
+        else:
+            st = time.time()
+            subtitle_file_path = generate_subtitles(
+                source_path=args.source_path,
+                dst_language=args.dst_language,
+                output=args.output,
+                debug=args.debug,
+                cloud=args.cloud,
+                disable_time=args.disable_time,
+                min_height=args.min_height,
+                max_height=args.max_height,
+                l_v=args.l_v,
+            )
+            print("Subtitles file created at {} time consumer: {}".format(subtitle_file_path, time.time() - st))
     except KeyboardInterrupt:
         return 1
 
